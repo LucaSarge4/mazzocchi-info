@@ -24,6 +24,7 @@ export class LoginComponent implements OnInit {
 
     submit() {
         console.log(this.login);
+        this._router.navigate(['show_data']);
     }
 
 }
