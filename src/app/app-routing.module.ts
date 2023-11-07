@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { LoginComponent } from './login/login.component';
+import { AuthGuardService } from './services/auth.guard.service';
 import { TableComponent } from './table/table.component';
 
 const routes: Routes = [
@@ -15,7 +16,8 @@ const routes: Routes = [
     },
     {
         path: 'show_data',
-        component: TableComponent
+        component: TableComponent,
+        canActivate: [AuthGuardService]
     }
 ];
 
