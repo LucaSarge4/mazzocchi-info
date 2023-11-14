@@ -11,4 +11,10 @@
         height: calc(100% - 56px);
         overflow-y: auto;
     }
+
+    .table-actions {
+        display: flex;
+        flex-direction: row-reverse;
+        padding: 20px;
+    }
 }

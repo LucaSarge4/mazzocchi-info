@@ -1,7 +1,7 @@
 import { Component, OnInit } from "@angular/core";
 import { FormControl, FormGroup, Validators } from "@angular/forms";
 import { Router } from "@angular/router";
-import { take, tap } from "rxjs";
+import { EMPTY, catchError, take, tap } from "rxjs";
 import { AuthService, LoginPayloadType } from "../services/auth.service";
 import { BackendService } from "../services/backend.service";
 
@@ -27,11 +27,15 @@ export class LoginComponent implements OnInit {
     }
 
     submit() {
+        this.error = undefined;
         this._authService.login(this.login.getRawValue() as LoginPayloadType).pipe(
             tap(token => {
-                console.log(token);
                 this._backendService.setAuthToken(token);
                 this._router.navigate(['show_data']);
+            }),
+            catchError(err => {
+                this.error = 'Login Failed';
+                return EMPTY;
             }),
             take(1)
         ).subscribe();

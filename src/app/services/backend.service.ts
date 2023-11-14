@@ -5,7 +5,7 @@ import { Observable } from "rxjs";
 @Injectable()
 export class BackendService {
 
-    private base_url = 'https://webapp.mazzocchinet.com/api';
+    private base_url = 'http://109.73.84.88:8800/api';
 
     private _authToken!: string;
 
@@ -18,7 +18,12 @@ export class BackendService {
     }
 
 
-    public getTableData(): Observable<any> {
-        return this._http.get(`${this.base_url}/status`);
+    public getTableData(params: { page: number, size: number }): Observable<any> {
+        const endpoint = `${this.base_url}/orders?page=${params.page}&size=${params.size}`
+        return this._http.get(endpoint, {
+            headers: {
+                Authorization: `Bearer ${this._authToken}`
+            }
+        });
     }
 }

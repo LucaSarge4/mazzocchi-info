@@ -7,7 +7,7 @@ export type LoginPayloadType = { email: string, password: string };
 @Injectable()
 export class AuthService {
 
-    private readonly _loginUrl = 'https://webapp.mazzocchinet.com/api/auth/login';
+    private readonly _loginUrl = 'http://109.73.84.88:8800/api/auth/login';
     private _isLogged = false;
 
     constructor(private _http: HttpClient) {
@@ -15,8 +15,8 @@ export class AuthService {
     }
 
     public login(body: LoginPayloadType): Observable<string> {
-        return this._http.post<{ response: { token: string } }>(this._loginUrl, body).pipe(
-            map(res => res.response.token),
+        return this._http.post<{ token: string }>(this._loginUrl, body).pipe(
+            map(res => res.token),
             tap(_ => this._isLogged = true),
             catchError(_ => { throw new Error('Login Failed') }),
         );
