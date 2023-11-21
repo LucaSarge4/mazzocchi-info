@@ -1,0 +1,55 @@
+<div class="create-user-container">
+    <mat-card>
+        <mat-card-title>Create Utente</mat-card-title>
+        <mat-card-content>
+            <form [formGroup]="createUserForm" (ngSubmit)="submit()">
+                <p>
+                    <mat-form-field>
+                        <mat-label>Nome</mat-label>
+                        <input type="text" matInput placeholder="Nome" formControlName="name">
+                    </mat-form-field>
+                </p>
+
+                <p>
+                    <mat-form-field>
+                        <mat-label>Email</mat-label>
+                        <input type="email" matInput placeholder="Email" formControlName="email">
+                    </mat-form-field>
+                </p>
+
+                <p>
+                    <mat-form-field>
+                        <mat-label>Password</mat-label>
+                        <input type="password" matInput placeholder="Password" formControlName="password">
+                    </mat-form-field>
+                </p>
+
+                <p>
+                    <mat-form-field>
+                        <mat-label>Role</mat-label>
+                        <mat-select formControlName="role" required>
+                            <mat-option value="user">Utente</mat-option>
+                            <mat-option value="admin">Admin</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </p>
+
+                <p>
+                    <mat-form-field>
+                        <mat-label>Nome Cliente</mat-label>
+                        <input type="text" matInput placeholder="Nome Cliente" formControlName="customerName">
+                    </mat-form-field>
+                </p>
+
+                <p *ngIf="error" class="error">
+                    {{ error }}
+                </p>
+
+                <div class="button">
+                    <button mat-raised-button type="submit">Conferma</button>
+                </div>
+
+            </form>
+        </mat-card-content>
+    </mat-card>
+</div>

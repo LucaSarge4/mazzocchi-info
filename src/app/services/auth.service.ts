@@ -7,7 +7,7 @@ export type LoginPayloadType = { email: string, password: string };
 @Injectable()
 export class AuthService {
 
-    private readonly _loginUrl = 'http://109.73.84.88:8800/api/auth/login';
+    private readonly _loginUrl = 'https://webapp.mazzocchinet.com/api/auth/login';
     private _isLogged = false;
 
     constructor(private _http: HttpClient) {

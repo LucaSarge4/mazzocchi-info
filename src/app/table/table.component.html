@@ -2,23 +2,48 @@
     paginatorState: paginatorState$ | async,
     responseConfig: responseConfig$ | async,
     loading: loading$ | async,
-    dataSource: dataSource$ | async
+    dataSource: dataSource$ | async,
+    isAdmin: isAdmin$ | async,
+    sortingConfig: sortingConfig$ | async,
+    filterConfig: filterConfig$ | async,
 } as vm">
     <div class="table-container">
         <mat-spinner *ngIf="vm.loading"></mat-spinner>
         <div class="table-actions">
-            <button mat-raised-button color="accent" (click)="handleExport()" [disabled]="vm.loading">Esporta
-                Excel</button>
+            <div class="filter">
+                <mat-select class="select" [value]="vm.filterConfig?.filterField"
+                    (valueChange)="filterConfig$.next({filterField: $event, filterValue: null})"
+                    placeholder="Seleziona Chiave Di Ricerca" [disabled]="true">
+                    <mat-option value="user">Utente</mat-option>
+                    <mat-option value="admin">Admin</mat-option>
+                </mat-select>
+                <mat-form-field class="input">
+                    <input type="text" matInput placeholder="Ricerca per" [ngModel]="vm.filterConfig?.filterValue"
+                        (ngModelChange)="filterConfig$.next({filterField: vm.filterConfig!.filterField, filterValue: $event})"
+                        [disabled]="true">
+                </mat-form-field>
+
+            </div>
+            <div class="button-actions">
+                <button mat-raised-button color="accent" routerLink="/create_user" [disabled]="vm.loading"
+                    *ngIf="vm.isAdmin">Crea
+                    Utente</button>
+                <button mat-raised-button color="accent" (click)="handleExport()" [disabled]="vm.loading">Esporta
+                    Excel</button>
+            </div>
+
         </div>
         <div class="table-wrapper">
-            <table mat-table [dataSource]="vm.dataSource!" *ngIf="!vm.loading">
+            <table mat-table matSort (matSortChange)="sortData($event)" [dataSource]="vm.dataSource!"
+                [matSortActive]="vm.sortingConfig!.sortingField" [matSortDirection]="vm.sortingConfig!.sortingDir"
+                *ngIf="!vm.loading">
 
                 <!--- Note that these columns can be defined in any order.
                       The actual rendered columns are set as a property on the row definition" -->
 
                 <!-- Position Column -->
                 <ng-container *ngFor="let column of displayedColumns" [matColumnDef]="column.key">
-                    <th mat-header-cell *matHeaderCellDef>{{column.label}} </th>
+                    <th mat-header-cell *matHeaderCellDef mat-sort-header>{{column.label}} </th>
                     <td mat-cell *matCellDef="let element"> {{element[column.key]}} </td>
                 </ng-container>
 

@@ -1,8 +1,19 @@
 import { Component, DestroyRef, inject } from "@angular/core";
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { BehaviorSubject, Observable, delay, distinctUntilChanged, forkJoin, map, take, tap } from "rxjs";
+import { Sort, SortDirection } from "@angular/material/sort";
+import { BehaviorSubject, Observable, catchError, combineLatest, delay, distinctUntilChanged, forkJoin, map, of, switchMap, take, tap, timer } from "rxjs";
 import * as XLSX from 'xlsx';
+import { UserRoleEnum } from "../models/user.type";
 import { BackendService } from "../services/backend.service";
+
+export type SortingType = {
+    sortingDir: SortDirection;
+    sortingField: string;
+}
+
+const DEFAULT_SORTING: SortingType = {
+    sortingDir: 'desc',
+    sortingField: 'codice'
+}
 
 @Component({
     selector: 'app-table',
@@ -21,7 +32,12 @@ export class TableComponent {
         totalPages: 0
     });
 
+    sortingConfig$ = new BehaviorSubject<SortingType>(DEFAULT_SORTING);
+
+    filterConfig$ = new BehaviorSubject<{ filterField: string | null, filterValue: string | null } | null>({ filterField: null, filterValue: null });
+
     loading$ = new BehaviorSubject(false);
+    isAdmin$: Observable<boolean>;
 
     displayedColumns: { key: string, label: string }[] = [
         { label: 'Codice', key: 'codice' },
@@ -40,33 +56,49 @@ export class TableComponent {
 
     columnsKeys = this.displayedColumns.map(elm => elm.key);
 
-    dataSource$ = new BehaviorSubject<any[]>([]);
+    dataSource$: Observable<any[]>;
 
     private readonly _destroy = inject(DestroyRef);
 
     constructor(private _backendService: BackendService) {
-        this.paginatorState$.pipe(
+
+        this.dataSource$ = combineLatest([
+            this.paginatorState$,
+            this.sortingConfig$,
+            timer(0, 1000 * 30)
+        ]).pipe(
             distinctUntilChanged(),
-            tap(value => this._getItems(value)),
-            takeUntilDestroyed(this._destroy)
-        ).subscribe();
+            tap(_ => this.loading$.next(true)),
+            delay(300),
+            switchMap(([paginator, sorting]) => this._getItems(paginator, sorting).pipe(
+                tap(({ current_page, total_count, total_pages }) => {
+                    this.responseConfig$.next({
+                        totalCount: total_count,
+                        totalPages: total_pages
+                    });
+                }),
+                map(response => response.results),
+                delay(300),
+                tap(_ => this.loading$.next(false)),
+            ))
+        );
+
+        this.isAdmin$ = this._backendService.getUser().pipe(
+            take(1),
+            map(response => response.data.user.role === UserRoleEnum.ADMIN),
+            catchError(err => of(false))
+        );
     }
 
-    private _getItems(paginator: { page: number, size: number }): void {
-        this.loading$.next(true);
-        this._backendService.getTableData(paginator).pipe(
-            tap(({ current_page, total_count, total_pages }) => {
-                this.responseConfig$.next({
-                    totalCount: total_count,
-                    totalPages: total_pages
-                });
-            }),
-            map(response => response.results),
-            tap(items => this.dataSource$.next(items)),
-            delay(300),
-            tap(_ => this.loading$.next(false)),
-            take(1)
-        ).subscribe();
+    private _getItems(paginator: { page: number, size: number }, sorting: SortingType): Observable<any> {
+        return this._backendService.getTableData(paginator, sorting);
+    }
+
+    sortData(event: Sort): void {
+        this.sortingConfig$.next({
+            sortingDir: event.direction,
+            sortingField: event.active
+        });
     }
 
     handlePageEvent(event: { pageIndex: number, pageSize: number }): void {
@@ -87,8 +119,6 @@ export class TableComponent {
             this.loading$.next(false);
         }
         );
-
-
     }
 
     private _getAllDataToExport(): Observable<any[]> {
