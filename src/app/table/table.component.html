@@ -25,9 +25,11 @@
 
             </div>
             <div class="button-actions">
-                <button mat-raised-button color="accent" routerLink="/create_user" [disabled]="vm.loading"
+                <button mat-raised-button color="primary" routerLink="/create_user" [disabled]="vm.loading"
                     *ngIf="vm.isAdmin">Crea
                     Utente</button>
+                <button mat-raised-button color="accent" (click)="handleRefresh()" [disabled]="vm.loading">Aggiorna
+                    Dati</button>
                 <button mat-raised-button color="accent" (click)="handleExport()" [disabled]="vm.loading">Esporta
                     Excel</button>
             </div>

@@ -1,6 +1,6 @@
 import { Component, DestroyRef, inject } from "@angular/core";
 import { Sort, SortDirection } from "@angular/material/sort";
-import { BehaviorSubject, Observable, catchError, combineLatest, delay, distinctUntilChanged, forkJoin, map, of, switchMap, take, tap, timer } from "rxjs";
+import { BehaviorSubject, EMPTY, Observable, ReplaySubject, catchError, combineLatest, delay, distinctUntilChanged, forkJoin, map, of, switchMap, take, tap } from "rxjs";
 import * as XLSX from 'xlsx';
 import { UserRoleEnum } from "../models/user.type";
 import { BackendService } from "../services/backend.service";
@@ -39,6 +39,8 @@ export class TableComponent {
     loading$ = new BehaviorSubject(false);
     isAdmin$: Observable<boolean>;
 
+    forceRefresh$ = new ReplaySubject(1);
+
     displayedColumns: { key: string, label: string }[] = [
         { label: 'Codice', key: 'codice' },
         { label: 'Materiale', key: 'materiale' },
@@ -61,11 +63,12 @@ export class TableComponent {
     private readonly _destroy = inject(DestroyRef);
 
     constructor(private _backendService: BackendService) {
+        this.forceRefresh$.next(EMPTY);
 
         this.dataSource$ = combineLatest([
             this.paginatorState$,
             this.sortingConfig$,
-            timer(0, 1000 * 30)
+            this.forceRefresh$
         ]).pipe(
             distinctUntilChanged(),
             tap(_ => this.loading$.next(true)),
@@ -78,6 +81,7 @@ export class TableComponent {
                     });
                 }),
                 map(response => response.results),
+                catchError(err => of([])),
                 delay(300),
                 tap(_ => this.loading$.next(false)),
             ))
@@ -99,6 +103,10 @@ export class TableComponent {
             sortingDir: event.direction,
             sortingField: event.active
         });
+    }
+
+    handleRefresh(): void {
+        this.forceRefresh$.next(EMPTY);
     }
 
     handlePageEvent(event: { pageIndex: number, pageSize: number }): void {
