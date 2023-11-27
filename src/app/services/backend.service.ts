@@ -21,8 +21,10 @@ export class BackendService {
     }
 
 
-    public getTableData(params: { page: number, size: number }, sorting?: SortingType): Observable<any> {
-        const endpoint = `${this.base_url}/orders?page=${params.page}&size=${params.size}${sorting ? `&sorting_dir=${sorting.sortingDir}&sorting_field=${sorting.sortingField}` : ''}`;
+    public getTableData(params: { page: number, size: number }, sorting?: SortingType, filter?: { filterField: string | null, filterValue: string | null } | null): Observable<any> {
+        const filterQuery = filter && filter.filterField && filter.filterValue ? `&fts_column=${filter.filterField}&fts_string=${filter.filterValue}` : '';
+        const sortingQuery = sorting ? `&sorting_dir=${sorting.sortingDir}&sorting_field=${sorting.sortingField}` : '';
+        const endpoint = `${this.base_url}/orders?page=${params.page}&size=${params.size}${sortingQuery}${filterQuery}`;
         return this._http.get(endpoint, {
             headers: {
                 Authorization: `Bearer ${this._authToken}`

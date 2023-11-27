@@ -11,14 +11,18 @@ import { MaterialModule } from './material.module';
 import { AuthGuardService } from './services/auth.guard.service';
 import { AuthService } from './services/auth.service';
 import { BackendService } from './services/backend.service';
+import { InformativaDialogComponent } from './table/informativa-dialog.component';
 import { TableComponent } from './table/table.component';
+import { TableValuePipe } from './table/value.pipe';
 
 @NgModule({
     declarations: [
         AppComponent,
         LoginComponent,
         TableComponent,
-        CreateUserComponent
+        CreateUserComponent,
+        TableValuePipe,
+        InformativaDialogComponent
     ],
     imports: [
         BrowserModule,

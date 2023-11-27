@@ -3,7 +3,18 @@
     display: flex;
     flex-direction: column;
     justify-items: center;
-    justify-content: space-around;
+    justify-content: center;
+
+    .logo {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-around;
+
+        img {
+            width: 500px;
+            max-width: 500px;
+        }
+    }
 
     mat-card {
         width: 50%;

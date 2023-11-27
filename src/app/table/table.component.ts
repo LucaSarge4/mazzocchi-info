@@ -1,9 +1,11 @@
 import { Component, DestroyRef, inject } from "@angular/core";
+import { MatDialog } from "@angular/material/dialog";
 import { Sort, SortDirection } from "@angular/material/sort";
-import { BehaviorSubject, EMPTY, Observable, ReplaySubject, catchError, combineLatest, delay, distinctUntilChanged, forkJoin, map, of, switchMap, take, tap } from "rxjs";
+import { BehaviorSubject, EMPTY, Observable, ReplaySubject, catchError, combineLatest, delay, distinctUntilChanged, filter, forkJoin, map, of, switchMap, take, tap } from "rxjs";
 import * as XLSX from 'xlsx';
 import { UserRoleEnum } from "../models/user.type";
 import { BackendService } from "../services/backend.service";
+import { InformativaDialogComponent } from "./informativa-dialog.component";
 
 export type SortingType = {
     sortingDir: SortDirection;
@@ -34,19 +36,19 @@ export class TableComponent {
 
     sortingConfig$ = new BehaviorSubject<SortingType>(DEFAULT_SORTING);
 
-    filterConfig$ = new BehaviorSubject<{ filterField: string | null, filterValue: string | null } | null>({ filterField: null, filterValue: null });
+    filterConfig$ = new BehaviorSubject<{ filterField: string | null, filterValue: string | null }>({ filterField: null, filterValue: null });
 
     loading$ = new BehaviorSubject(false);
     isAdmin$: Observable<boolean>;
 
     forceRefresh$ = new ReplaySubject(1);
 
-    displayedColumns: { key: string, label: string }[] = [
+    readonly displayedColumns: { key: string, label: string }[] = [
         { label: 'Codice', key: 'codice' },
         { label: 'Materiale', key: 'materiale' },
         { label: 'Spessore', key: 'spessore' },
-        { label: 'DimX', key: 'dim_x' },
-        { label: 'DimY', key: 'dim_y' },
+        { label: 'DimX', key: 'dimX' },
+        { label: 'DimY', key: 'dimY' },
         { label: 'Area', key: 'area' },
         { label: 'Peso', key: 'peso' },
         { label: 'Ritaglio', key: 'ritaglio' },
@@ -62,18 +64,21 @@ export class TableComponent {
 
     private readonly _destroy = inject(DestroyRef);
 
-    constructor(private _backendService: BackendService) {
+    constructor(private _backendService: BackendService, private _dialogService: MatDialog) {
         this.forceRefresh$.next(EMPTY);
 
         this.dataSource$ = combineLatest([
             this.paginatorState$,
             this.sortingConfig$,
+            this.filterConfig$.pipe(
+                filter(({ filterField, filterValue }) => filterField !== null && filterValue !== null || filterField === null && filterValue === null),
+            ),
             this.forceRefresh$
         ]).pipe(
             distinctUntilChanged(),
             tap(_ => this.loading$.next(true)),
             delay(300),
-            switchMap(([paginator, sorting]) => this._getItems(paginator, sorting).pipe(
+            switchMap(([paginator, sorting, filter]) => this._getItems(paginator, sorting, filter).pipe(
                 tap(({ current_page, total_count, total_pages }) => {
                     this.responseConfig$.next({
                         totalCount: total_count,
@@ -94,8 +99,8 @@ export class TableComponent {
         );
     }
 
-    private _getItems(paginator: { page: number, size: number }, sorting: SortingType): Observable<any> {
-        return this._backendService.getTableData(paginator, sorting);
+    private _getItems(paginator: { page: number, size: number }, sorting: SortingType, filter: { filterField: string | null, filterValue: string | null } | null): Observable<any> {
+        return this._backendService.getTableData(paginator, sorting, filter);
     }
 
     sortData(event: Sort): void {
@@ -123,10 +128,14 @@ export class TableComponent {
             const wb: XLSX.WorkBook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'Sheet1');
             /* save to file */
-            XLSX.writeFile(wb, 'export_orders.xlsx');
+            XLSX.writeFile(wb, 'export_lamiere.xlsx');
             this.loading$.next(false);
         }
         );
+    }
+
+    handleDialog(): void {
+        this._dialogService.open(InformativaDialogComponent);
     }
 
     private _getAllDataToExport(): Observable<any[]> {
